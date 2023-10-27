@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Button } from '@rneui/themed';
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
 
 
 export default function MapScreen({ route, navigation }) {
@@ -20,24 +21,23 @@ export default function MapScreen({ route, navigation }) {
 
     useEffect(() => { fetchCoordinates(address); }, []);
 
-    const fetchCoordinates = (address) => {
-        const KEY = process.env.EXPO_PUBLIC_API_TOKEN;
+    const fetchCoordinates = async (address) => {
+        const KEY = process.env.EXPO_PUBLIC_API_TOKEN; 
         const url = `https://www.mapquestapi.com/geocoding/v1/address?key=${KEY}&location=${address}`;
 
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
 
-                const location = data.results[0].location[0];
-                console.log(location);
-                const { lat, lng } = location.latLng;
-                setRegion({ ...region, latitude: lat, longitude: lng });
-                setFullAddress(`${location.street} ${location.adminArea6} ${location.adminArea5}`)
-            })
-            .catch(error =>
-                console.log('API call failed. Did you provide a valid API key?', error.message));
-        
+            const location = data.results[0].location[0];
+            console.log(location);
+
+            const { lat, lng } = location.latLng;
+            setRegion({ ...region, latitude: lat, longitude: lng });
+            setFullAddress(`${location.street} ${location.adminArea6} ${location.adminArea5}`);
+        } catch (error) {
+            console.log('API call failed. Did you provide a valid API key?', error.message);
+        }
     };
 // Keyboard.dismiss();
 
@@ -52,9 +52,11 @@ export default function MapScreen({ route, navigation }) {
             <View style={styles.button}>
             <Button
                 title="SAVE LOCATION"
-                onPress={() => navigation.navigate('HomeScreen', { saveItem })} // Saving the address on MapScreen
+                onPress={() => { navigation.navigate('Home', { fullAddress: fullAddress.trim() }); // Saving the address on MapScreen
+                }} 
             />
             </View>
+            <StatusBar style='auto' />
         </View>
     );
 }

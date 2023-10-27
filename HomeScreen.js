@@ -3,6 +3,7 @@ import { Input, ListItem } from '@rneui/themed';
 import { Button } from '@rneui/themed';
 import { useEffect, useState } from 'react';
 import * as SQLite from 'expo-sqlite';
+import { StatusBar } from 'expo-status-bar';
 
 // Currently does not work correctly
 
@@ -32,7 +33,7 @@ export default function HomeScreen({ navigation, route }) {
 
     // Saving an address to the database
     const savePlace = (address) => {
-        console.log('savePlace, address');
+        console.log('savePlace', address);
         db.transaction(
             tx => {
                 tx.executeSql('insert into places (address) values (?);',
@@ -69,7 +70,7 @@ export default function HomeScreen({ navigation, route }) {
 
     // Alert confirming the deletation
     const confirmDelete = id =>
-        Alert - alert(
+        Alert.alert(
             "Do you want to remove the address?",
             "The address will be deleted permanently",
             [
@@ -104,25 +105,34 @@ export default function HomeScreen({ navigation, route }) {
             onLongPress={() => confirmDelete(item.id)}>
             <ListItem.Content style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <ListItem.Title numberOfLines={1} style={{ flex: 1 }}>{item.address}</ListItem.Title>
+                <ListItem.Subtitle right>Show on map</ListItem.Subtitle>
             </ListItem.Content>
+            <ListItem.Chevron />
         </ListItem>
-    )
+    );
 
     return (
         <View style={styles.container}>
             <Input
-                placeholder='Type in address ' label='PLACEFINDER'
-                onChangeText={location => setLocation(location)} value={location} />
+                placeholder='Type in address' label='PLACEFINDER'
+                onChangeText={text => setLocation(text)} value={location} />
             <Button
                 title="SHOW ON MAP"
-                onPress={() => navigation.navigate('MapScreen', {location})} // Navigate to MapScreen
+                onPress={() => {
+                    if (location.trim()) {
+                        navigation.navigate('MapScreen', { address: location }); // Navigate to MapScreen
+                        setLocation('');
+                    }
+                }}
             />
             <FlatList
                 data={places}
                 renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={item => item.id.toString()}
             />
-        </View>);
+            <StatusBar style='auto' />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
